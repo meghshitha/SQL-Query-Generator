@@ -5,6 +5,7 @@ load_dotenv()
 import streamlit as st
 import os
 import sqlite3
+import pandas as pd
 
 import google.generativeai as genai
 
@@ -20,33 +21,25 @@ def get_gemini_response(question,prompt):
 
 
 def read_sql_query(sql,db):
-    conn=sqlite3.connect(db) 
-    qry=conn.cursor()
-    qry.execute(sql)
-    rows=qry.fetchall()
-    conn.commit()
-    conn.close()
+    try:
+        conn = sqlite3.connect(db)
+        qry = conn.cursor()
+        qry.execute(sql)
+        rows = qry.fetchall()
+        conn.commit()
+        conn.close()
+        for row in rows:
+            return rows
+        
+    except sqlite3.Error as e:
+        st.text(f"Sorry {e} ")
+        return 0
+            #  return f"SQL error: {e}"
+    except Exception as e:
+        st.text(f"Sorry  {e}")
+        return 0
 
-    for row in rows:
-        print(row)
-    return rows
 
-# it defines the gemini ai that how u want to create the sql query
-# by giving the example u are teaching it
-
-# promt=[
-#     """
-#     you are expert in converting English question to SQL Query.
-#     The Sql database haf the name CMS and the table as STUDENT and has the following columns-
-#     s_name`, `s_reg`, `s_phno`, `s_sem`, `s_comb`, `s_pass`, `s_fees`, `s_balance` \n\n
-#     for example 1: How many entires of records are present?
-#     Then the sql comand will something like this " SELECT * FROM student;"
-#     \nEXample 2: Tell me all the students who are studying in 1st sem ?
-#     then the sql command will we be something like " SELECT * FROM student WHERE s_sem='1 SEM';"
-#     and also code should not have ''' in the beginning and end and "sql" word in output \n
-#     if empty question is asked just show all data in database
-# """
-# ]
 
 promt=["""
  You are an expert in converting English questions to SQL queries. The code should not have ''' in the beginning and end and the word "sql" should not be included in the output. If an empty question is asked, just show all data in the database.
@@ -131,9 +124,43 @@ Here's an example of the 'Billing' table contains:
 
 
 st.set_page_config(page_title="Retrive Any Query From Database")
-st.header("My App To Retrive Medical Data ")
+st.markdown('<h1 class="main-header">&emsp;My App To Retrive Medical Data</h1>', unsafe_allow_html=True)
+# st.header("My App To Retrive Medical Data ")
 
-question=st.text_input("Input:",key="input")
+data = {
+    "Table Name": ["Patients", "Doctors", "Appointments", "Diagnosis", "Treatments", "Billing"],
+    "Description": [
+        "Stores patient details: ID, name, DOB, gender, address, phone, email",
+        "Stores doctor details: ID, name, specialization, phone, email",
+        "Stores appointment details: ID, patient ID, doctor ID, date, time, status",
+        "Stores diagnosis details: ID, appointment ID, description, date diagnosed",
+        "Stores treatment details: ID, diagnosis ID, description, date, cost",
+        "Stores billing details: ID, patient ID, total amount, amount paid, billing date"
+    ]
+}
+
+# Convert the data to a DataFrame
+df = pd.DataFrame(data)
+st.markdown("")
+# Create the Streamlit app
+st.text("Database Table Descriptions")
+
+# Styling the DataFrame with CSS
+styled_df = df.style.set_table_styles({
+    'Table Name': [{'selector': 'td:hover', 'props': 'background-color: #f1f1f1;'}],
+    'Description': [{'selector': 'td:hover', 'props': 'background-color: #f1f1f1;'}]
+}).set_properties(**{
+    'background-color': 'transparent',
+    'color': 'white',
+    'border-color': 'grey'
+}).set_caption("Overview of Database Tables").set_table_attributes('style="width:100%; font-size:14px;"')
+
+# Display the styled table
+st.write(styled_df, unsafe_allow_html=True)
+
+
+
+question=st.text_input("Input:",key="input",placeholder="Enter the Question")
 
 submit=st.button("Get Query")
 # st.subheader()
@@ -141,17 +168,27 @@ submit=st.button("Get Query")
 
 if submit:
     response=get_gemini_response(question,promt)
-    print(response)
-    st.text(f"The Query is : {response}")
-    # st.markdown(response)
-
-
+ 
     data=read_sql_query(response,"medical.db")
-    st.subheader("The response Is : ")
-    for row in data:
-        print(row)
-        # st.markdown(row)
-        st.markdown(row)
+    if(data==None):
+            st.markdown(" SORRY NO DATA")  
+    elif(data!=0):
+        # st.text(f"The Query is : {response}")
+        st.markdown(f'<p class="response-text">The Query is : *** {response}  ***</p>', unsafe_allow_html=True)
+        st.subheader("The response Is : ")
+        for row in data:
+            st.markdown(row)
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -167,5 +204,24 @@ st.text{
     font-size: 20px;
     font-family:Garamond;
 }
+.response-text {
+        font-size: 18px;
+        color: orange;
+        font-family: Arial, sans-serif;
+        background: rgb(91,12,238);
+        background: linear-gradient(90deg, rgba(91,12,238,1) 27%, rgba(198,19,152,1) 100%);
+        border-radius:30px;
+            padding-left:30px;
+    }
+
+.main-header {
+        font-size: 36px;
+        color: white;
+        # background-image: linear-gradient(#fe667d, #ffa375);
+        # background-color: rgba(201, 76, 76, 0.3);
+        background: linear-gradient(297deg, rgba(175,12,238,1) 27%, rgba(39,19,198,1) 100%);
+            border-radius:30px;
+
+    }
 </style>
 """, unsafe_allow_html=True)
