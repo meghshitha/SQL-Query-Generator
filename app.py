@@ -179,19 +179,6 @@ if submit:
         for row in data:
             st.markdown(row)
 
-
-
-
-
-
-
-
-
-
-
-
-
-
 st.markdown("""
 <style>
 .custom-text{
@@ -206,10 +193,10 @@ st.text{
 }
 .response-text {
         font-size: 18px;
-        color: orange;
+        color: white;
         font-family: Arial, sans-serif;
         background: rgb(91,12,238);
-        background: linear-gradient(90deg, rgba(91,12,238,1) 27%, rgba(198,19,152,1) 100%);
+        background: linear-gradient(297deg, rgba(190,181,219,100) 27%, rgba(232,175,204,100) 100%);
         border-radius:30px;
             padding-left:30px;
     }
@@ -217,9 +204,9 @@ st.text{
 .main-header {
         font-size: 36px;
         color: white;
-        # background-image: linear-gradient(#fe667d, #ffa375);
+        # background-image: linear-gradient(#fe667, #ffa375);
         # background-color: rgba(201, 76, 76, 0.3);
-        background: linear-gradient(297deg, rgba(175,12,238,1) 27%, rgba(39,19,198,1) 100%);
+        background: linear-gradient(297deg, rgba(190,181,219,100) 27%, rgba(232,175,204,100) 100%);
             border-radius:30px;
 
     }
